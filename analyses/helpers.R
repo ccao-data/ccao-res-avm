@@ -93,3 +93,9 @@ s3_data_download <- function(dvc_md5_assessment_data) {
   # Read and return the parquet data
   read_parquet(s3_path)
 }
+
+
+mode_function <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
