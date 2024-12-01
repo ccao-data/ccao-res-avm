@@ -613,9 +613,9 @@ message("Saving land rates")
 land_site_rate_data %>%
   select(meta_pin = pin, meta_class = class, land_rate_per_pin, year) %>%
   write_parquet(paths$input$land_site_rate$local)
-land_nbhd_rate_data %>%
-  select(meta_nbhd = town_nbhd, meta_class = class, land_rate_per_sqft) %>%
-  write_parquet(paths$input$land_nbhd_rate$local)
+# land_nbhd_rate_data %>%
+#   select(meta_nbhd = town_nbhd, meta_class = class, land_rate_per_sqft) %>%
+#   write_parquet(paths$input$land_nbhd_rate$local)
 
 # Reminder to upload to DVC store
 message(
