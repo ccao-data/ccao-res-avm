@@ -73,8 +73,8 @@ stages:
       size: 17448
     - path: input/training_data.parquet
       hash: md5
-      md5: 680e07bdb2a55166b7070155c4ff5a38
-      size: 148069926
+      md5: fd9ee8b538d4314f2fc155ecc24d12b0
+      size: 207030130
     params:
       params.yaml:
         cv:
@@ -364,8 +364,8 @@ stages:
       size: 2109
     - path: input/training_data.parquet
       hash: md5
-      md5: 680e07bdb2a55166b7070155c4ff5a38
-      size: 148069926
+      md5: fd9ee8b538d4314f2fc155ecc24d12b0
+      size: 207030130
     - path: output/workflow/fit/model_workflow_fit.zip
       hash: md5
       md5: 9c53eaf3b76c70369107fc259fd29dff
