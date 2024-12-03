@@ -74,7 +74,7 @@ shap_df_filtered_long %>%
 ## SHAP Median Absolute Value by Township
 
 This is the same table, except ranked by township. To identify the rank of an indicator within a township, simply search for that township in the search bar.
-```{r shap_township_importance}
+```{r shap_township_importance, echo=FALSE,warning=FALSE,message=FALSE,error=FALSE, results='asis',fig.keep='all'}
 shap_df_filtered_long %>%
   group_by(township_code, feature) %>%
   mutate(
@@ -121,8 +121,8 @@ shap_df_filtered_long %>%
 ## SHAP Charts
 ::: {.panel-tabset}
 
-### Violin Plot
-```{r violin_plots_shap_to_feature}
+## Violin Plot
+```{r violin_plot, echo=FALSE,warning=FALSE,message=FALSE,error=FALSE, results='asis',fig.keep='all'}
 
 # Calculate the number of digits
 num_digits <- card_individual %>%
@@ -156,7 +156,7 @@ card_individual %>%
 
 ## Scatterplot
 
-```{r, SHAP_scatterplot}
+```{r scatterplot, echo=FALSE,warning=FALSE,message=FALSE,error=FALSE, results='asis',fig.keep='all'}
 shapviz::shapviz(
   object = shap_new %>%
     select(all_of(shap_predictors)) %>%

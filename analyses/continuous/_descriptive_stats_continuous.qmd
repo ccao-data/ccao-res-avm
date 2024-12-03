@@ -75,7 +75,7 @@ create_summary_table(pin_individual, target_feature = {{ target_feature_value }}
 ::: {.panel-tabset}
 
 
-```{r, histogram_function}
+```{r histogram_function}
 create_histogram_with_statistics <- function(data, target_feature, x_label, y_label = "Frequency", filter_outliers = FALSE, filter_column = NULL) {
   # Conditionally filter outliers if requested
   if (filter_outliers && !is.null(filter_column)) {
@@ -117,9 +117,7 @@ create_histogram_with_statistics <- function(data, target_feature, x_label, y_la
 
 ## Feature Histogram`
 
-```{r, feature_histogram}
-
-
+```{r feature_histogram}
 create_histogram_with_statistics(
   data = pin_individual,
   target_feature = target_feature_value,
@@ -131,7 +129,7 @@ create_histogram_with_statistics(
 ## FMV Change Histogram
 
 This chart shows the distribution of the difference between 'pred_pin_initial_fmv' in the model with the added feature minus the model without the added feature. Outliers outside of 95% are removed to make the chart more readable. 
-```{r, fmv_change_histogram}
+```{r fmv_change_histogram, echo=FALSE,warning=FALSE,message=FALSE,error=FALSE, results='asis',fig.keep='all'}
 create_histogram_with_statistics(
   data = pin_individual,
   target_feature = "diff_pred_pin_initial_fmv",
@@ -143,7 +141,7 @@ create_histogram_with_statistics(
 
 ## SHAP Histogram
 
-```{r, shap_histogram}
+```{r shap_change_histogram, echo=FALSE,warning=FALSE,message=FALSE,error=FALSE, results='asis',fig.keep='all'}
 create_histogram_with_statistics(
   data = shap_new,
   target_feature = target_feature_value,
@@ -155,7 +153,7 @@ create_histogram_with_statistics(
 
 :::
 
-# Correlations`
+# Correlations
 
 ::: panel-tabset
 

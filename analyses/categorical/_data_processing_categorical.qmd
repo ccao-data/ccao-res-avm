@@ -1,5 +1,4 @@
 ```{r data_processing_categorical}
-
 # Create a individual card level dataset
 card_individual <- shap_new %>%
   select(
@@ -80,8 +79,10 @@ pin_nbhd <- pin_individual %>%
   count() %>%
   ungroup() %>%
   group_by(meta_nbhd_code) %>%
-  mutate(pin = sum(n),
-         percentage = (n / pin * 100)) %>%
+  mutate(
+    pin = sum(n),
+    percentage = (n / pin * 100)
+  ) %>%
   arrange(meta_nbhd_code, desc(n)) %>%
   mutate(rank = row_number()) %>%
   filter(rank <= 2) %>%
