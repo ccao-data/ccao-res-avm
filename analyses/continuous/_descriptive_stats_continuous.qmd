@@ -51,21 +51,17 @@ create_summary_table <- function(data, target_feature, group_by_column = NULL) {
 
 ```{r mean_median}
 create_summary_table(pin_individual, target_feature = {{ target_feature_value }})
-
-
 ```
 
 ## Township
 ```{r mean_median_township}
 create_summary_table(pin_individual, target_feature = {{ target_feature_value }}, group_by_column = "meta_township_name")
-
 ```
 
 ## Neighborhood
 
 ```{r mean_median_neighborhood}
 create_summary_table(pin_individual, target_feature = {{ target_feature_value }}, group_by_column = "meta_nbhd_code")
-
 ```
 
 :::
@@ -75,7 +71,7 @@ create_summary_table(pin_individual, target_feature = {{ target_feature_value }}
 ::: {.panel-tabset}
 
 
-```{r, histogram_function}
+```{r histogram_function}
 create_histogram_with_statistics <- function(data, target_feature, x_label, y_label = "Frequency", filter_outliers = FALSE, filter_column = NULL) {
   # Conditionally filter outliers if requested
   if (filter_outliers && !is.null(filter_column)) {
@@ -117,21 +113,18 @@ create_histogram_with_statistics <- function(data, target_feature, x_label, y_la
 
 ## Feature Histogram`
 
-```{r, feature_histogram}
-
-
+```{r feature_histogram}
 create_histogram_with_statistics(
   data = pin_individual,
   target_feature = target_feature_value,
   x_label = target_feature_value
 )
-
 ```
 
 ## FMV Change Histogram
 
 This chart shows the distribution of the difference between 'pred_pin_initial_fmv' in the model with the added feature minus the model without the added feature. Outliers outside of 95% are removed to make the chart more readable. 
-```{r, fmv_change_histogram}
+```{r fmv_change_histogram, echo=FALSE,warning=FALSE,message=FALSE,error=FALSE, results='asis',fig.keep='all'}
 create_histogram_with_statistics(
   data = pin_individual,
   target_feature = "diff_pred_pin_initial_fmv",
@@ -143,7 +136,7 @@ create_histogram_with_statistics(
 
 ## SHAP Histogram
 
-```{r, shap_histogram}
+```{r shap_change_histogram, echo=FALSE,warning=FALSE,message=FALSE,error=FALSE, results='asis',fig.keep='all'}
 create_histogram_with_statistics(
   data = shap_new,
   target_feature = target_feature_value,
@@ -155,7 +148,7 @@ create_histogram_with_statistics(
 
 :::
 
-# Correlations`
+# Correlations
 
 ::: panel-tabset
 
@@ -174,53 +167,52 @@ columns_to_remove <- c(
 )
 
 
-  numeric_cols <- assessment_data_new %>%
-    rename(
-      "Property Class Meta" = meta_class,
-      "Property Class Char" = char_class
-    ) %>%
-    ccao::vars_rename(
-      names_from = "model",
-      names_to = "pretty",
-      type = "inplace",
-      dict = ccao::vars_dict
-    ) %>%
-    select_if(is.numeric) %>%
-    select(-all_of(columns_to_remove))
+numeric_cols <- assessment_data_new %>%
+  rename(
+    "Property Class Meta" = meta_class,
+    "Property Class Char" = char_class
+  ) %>%
+  ccao::vars_rename(
+    names_from = "model",
+    names_to = "pretty",
+    type = "inplace",
+    dict = ccao::vars_dict
+  ) %>%
+  select_if(is.numeric) %>%
+  select(-all_of(columns_to_remove))
 
-  # Initialize a data frame to store correlation results
-  correlation_results <- data.frame(Feature = character(), Correlation = numeric(), Abs_Correlation = numeric(), stringsAsFactors = FALSE)
+# Initialize a data frame to store correlation results
+correlation_results <- data.frame(Feature = character(), Correlation = numeric(), Abs_Correlation = numeric(), stringsAsFactors = FALSE)
 
-  # Loop through each numeric column and calculate correlation and absolute correlation
-  for (col_name in names(numeric_cols)) {
-    # Filter out rows with missing values in the two columns being compared
-    complete_cases <- complete.cases(numeric_cols[[col_name]], assessment_data_new[[params$added_feature]])
+# Loop through each numeric column and calculate correlation and absolute correlation
+for (col_name in names(numeric_cols)) {
+  # Filter out rows with missing values in the two columns being compared
+  complete_cases <- complete.cases(numeric_cols[[col_name]], assessment_data_new[[params$added_feature]])
 
-    # Only compute correlation if there are complete cases
-    if (sum(complete_cases) > 0) {
-      correlation_value <- cor(numeric_cols[[col_name]][complete_cases], assessment_data_new[[params$added_feature]][complete_cases], use = "complete.obs")
-      abs_correlation_value <- abs(cor(abs(numeric_cols[[col_name]][complete_cases]), abs(assessment_data_new[[params$added_feature]][complete_cases]), use = "complete.obs"))
-      correlation_results <- rbind(correlation_results, data.frame(Feature = col_name, Correlation = correlation_value, Abs_Correlation = abs_correlation_value))
-    }
+  # Only compute correlation if there are complete cases
+  if (sum(complete_cases) > 0) {
+    correlation_value <- cor(numeric_cols[[col_name]][complete_cases], assessment_data_new[[params$added_feature]][complete_cases], use = "complete.obs")
+    abs_correlation_value <- abs(cor(abs(numeric_cols[[col_name]][complete_cases]), abs(assessment_data_new[[params$added_feature]][complete_cases]), use = "complete.obs"))
+    correlation_results <- rbind(correlation_results, data.frame(Feature = col_name, Correlation = correlation_value, Abs_Correlation = abs_correlation_value))
   }
+}
 
-  # Sort the correlation results in descending order by Correlation
-  correlation_results <- correlation_results %>%
-    arrange(dplyr::desc(Abs_Correlation)) %>%
-    mutate(across(where(is.numeric), ~ round(., 2)))
+# Sort the correlation results in descending order by Correlation
+correlation_results <- correlation_results %>%
+  arrange(dplyr::desc(Abs_Correlation)) %>%
+  mutate(across(where(is.numeric), ~ round(., 2)))
 
-  top_10_features <- correlation_results %>%
-    slice(1:10) %>%
-    pull(Feature)
+top_10_features <- correlation_results %>%
+  slice(1:10) %>%
+  pull(Feature)
 
-  correlation_results_clean <- correlation_results %>%
-    clean_column_values("Feature") %>%
-    slice(2:n())
+correlation_results_clean <- correlation_results %>%
+  clean_column_values("Feature") %>%
+  slice(2:n())
 
 
-  # Display the correlation results as a scrollable table
-  datatable(correlation_results_clean, options = list(scrollX = TRUE, scrollY = TRUE, pageLength = 10, order = list(list(1, "desc"))))
-
+# Display the correlation results as a scrollable table
+datatable(correlation_results_clean, options = list(scrollX = TRUE, scrollY = TRUE, pageLength = 10, order = list(list(1, "desc"))))
 ```
 
 ## Correlation Plot of 10 Features (absolute value)
@@ -247,6 +239,5 @@ assessment_data_new %>%
   rename_with(~ gsub("_", " ", .)) %>%
   cor() %>%
   corrplot(method = "circle", tl.cex = 0.6, tl.srt = 45, addgrid.col = "grey", mar = c(1, 1, 1, 1))
-
 ```
 :::

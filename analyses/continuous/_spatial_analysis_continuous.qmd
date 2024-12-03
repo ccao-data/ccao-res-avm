@@ -13,7 +13,6 @@ pin_nbhd %>%
   scale_fill_viridis_c(option = "viridis", name = "Value") +
   theme_void() +
   coord_sf(xlim = c(-88.4, -87.52398), ylim = c(41.5, 42.2))
-
 ```
 
 ### Median Value of the Feature
@@ -179,7 +178,6 @@ highest_100 <- leaflet_data %>%
   dplyr::slice(1:100)
 
 create_leaflet_map(highest_100, {{ target_feature_value }}, "Largest 100 Values")
-
 ```
 
 ### Highest 100 SHAP Values

@@ -68,7 +68,7 @@ analyses_paths <- list(
   )
 )
 
-source("../helpers.R")
+source("../shared/helpers.R")
 data_new <- model_fetch_run_subset(
   params$run_id,
   params$run_id_year,

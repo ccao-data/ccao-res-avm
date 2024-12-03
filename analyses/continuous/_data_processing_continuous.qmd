@@ -80,16 +80,16 @@ pin_individual <- assessment_pin_new %>%
 
 pin_nbhd <- pin_individual %>%
   group_by(meta_nbhd_code) %>%
-    summarize(
-      !!paste0(target_feature_value, "_neighborhood_mean") :=
-        mean(!!sym(target_feature_value), na.rm = TRUE),
-      !!paste0(target_feature_value, "_neighborhood_median") :=
-        median(!!sym(target_feature_value), na.rm = TRUE),
-      !!paste0(target_feature_value, "_neighborhood_90th") :=
-        quantile(!!sym(target_feature_value), 0.9, na.rm = TRUE),
-      !!paste0(target_feature_value, "_neighborhood_mode") :=
-        mode_function(!!sym(target_feature_value))
-    ) %>%
+  summarize(
+    !!paste0(target_feature_value, "_neighborhood_mean") :=
+      mean(!!sym(target_feature_value), na.rm = TRUE),
+    !!paste0(target_feature_value, "_neighborhood_median") :=
+      median(!!sym(target_feature_value), na.rm = TRUE),
+    !!paste0(target_feature_value, "_neighborhood_90th") :=
+      quantile(!!sym(target_feature_value), 0.9, na.rm = TRUE),
+    !!paste0(target_feature_value, "_neighborhood_mode") :=
+      mode_function(!!sym(target_feature_value))
+  ) %>%
   inner_join(nbhd, by = c("meta_nbhd_code" = "town_nbhd")) %>%
   st_as_sf()
 

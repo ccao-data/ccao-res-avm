@@ -137,8 +137,8 @@ p_interactive <- card_individual %>%
   mutate(bin = (!!sym(target_feature_value))) %>%
   group_by(bin) %>%
   filter(bin %in% c(
-    sort(unique(bin), decreasing = TRUE)[1:5],  # Top 5 highest values
-    sort(unique(bin))[1:5]  # Bottom 5 lowest values
+    sort(unique(bin), decreasing = TRUE)[1:5], # Top 5 highest values
+    sort(unique(bin))[1:5] # Bottom 5 lowest values
   ))
 ```
 

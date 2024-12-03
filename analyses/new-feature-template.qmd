@@ -231,45 +231,47 @@ pin_individual <- assessment_pin_new %>%
 if (type == "continuous") {
   pin_nbhd <- pin_individual %>%
     group_by(meta_nbhd_code) %>%
-      summarize(
-        !!paste0(target_feature_value, "_neighborhood_mean") :=
-          mean(!!sym(target_feature_value), na.rm = TRUE),
-        !!paste0(target_feature_value, "_neighborhood_median") :=
-          median(!!sym(target_feature_value), na.rm = TRUE),
-        !!paste0(target_feature_value, "_neighborhood_90th") :=
-          quantile(!!sym(target_feature_value), 0.9, na.rm = TRUE),
-        !!paste0(target_feature_value, "_neighborhood_mode") :=
-          mode_function(!!sym(target_feature_value))
-      ) %>%
+    summarize(
+      !!paste0(target_feature_value, "_neighborhood_mean") :=
+        mean(!!sym(target_feature_value), na.rm = TRUE),
+      !!paste0(target_feature_value, "_neighborhood_median") :=
+        median(!!sym(target_feature_value), na.rm = TRUE),
+      !!paste0(target_feature_value, "_neighborhood_90th") :=
+        quantile(!!sym(target_feature_value), 0.9, na.rm = TRUE),
+      !!paste0(target_feature_value, "_neighborhood_mode") :=
+        mode_function(!!sym(target_feature_value))
+    ) %>%
     inner_join(nbhd, by = c("meta_nbhd_code" = "town_nbhd")) %>%
     st_as_sf()
 } else {
-pin_nbhd <- pin_individual %>%
-  group_by(meta_nbhd_code, !!sym(target_feature_value)) %>%
-  count() %>%
-  ungroup() %>%
-  group_by(meta_nbhd_code) %>%
-  mutate(
-    percentage = n / sum(n) * 100
-  ) %>%
-  group_by(meta_nbhd_code) %>%
-  mutate(
-    !!paste0(target_feature_value, "_neighborhood_mode") := mode_function(!!sym(target_feature_value))
-  ) %>%
-  arrange(meta_nbhd_code, desc(n)) %>%
-  mutate(
-    plurality_factor = first(!!sym(target_feature_value))
-  ) %>%
-  ungroup() %>%
-  select(meta_nbhd_code, !!sym(target_feature_value), percentage, plurality_factor, 
-         !!paste0(target_feature_value, "_neighborhood_mode")) %>%
-  pivot_wider(
-    names_from = !!sym(target_feature_value),
-    values_from = percentage,
-    names_prefix = "percentage_"
-  ) %>%
-  inner_join(nbhd, by = c("meta_nbhd_code" = "town_nbhd")) %>%
-  st_as_sf()
+  pin_nbhd <- pin_individual %>%
+    group_by(meta_nbhd_code, !!sym(target_feature_value)) %>%
+    count() %>%
+    ungroup() %>%
+    group_by(meta_nbhd_code) %>%
+    mutate(
+      percentage = n / sum(n) * 100
+    ) %>%
+    group_by(meta_nbhd_code) %>%
+    mutate(
+      !!paste0(target_feature_value, "_neighborhood_mode") := mode_function(!!sym(target_feature_value))
+    ) %>%
+    arrange(meta_nbhd_code, desc(n)) %>%
+    mutate(
+      plurality_factor = first(!!sym(target_feature_value))
+    ) %>%
+    ungroup() %>%
+    select(
+      meta_nbhd_code, !!sym(target_feature_value), percentage, plurality_factor,
+      !!paste0(target_feature_value, "_neighborhood_mode")
+    ) %>%
+    pivot_wider(
+      names_from = !!sym(target_feature_value),
+      values_from = percentage,
+      names_prefix = "percentage_"
+    ) %>%
+    inner_join(nbhd, by = c("meta_nbhd_code" = "town_nbhd")) %>%
+    st_as_sf()
 }
 
 # Pivot wider for leaflet maps to allow multiple shap values
@@ -358,7 +360,7 @@ create_category_percentages <- function(data, target_feature, group_by_column = 
   } else {
     list(target_feature)
   }
-  
+
   category_percentages <- data %>%
     group_by(!!!group_vars) %>%
     count() %>%
@@ -399,7 +401,6 @@ if (params$type == "continuous") {
 } else if (params$type == "categorical") {
   create_category_percentages(pin_individual, target_feature = {{ target_feature_value }})
 }
-
 ```
 
 ## Township
@@ -410,7 +411,6 @@ if (params$type == "continuous") {
 } else if (params$type == "categorical") {
   create_category_percentages(pin_individual, target_feature = {{ target_feature_value }}, group_by_column = "meta_township_name")
 }
-
 ```
 
 ## Neighborhood
@@ -474,14 +474,12 @@ create_histogram_with_statistics <- function(data, target_feature, x_label, y_la
 `r if (params$type = "continuous") ## Feature Histogram`
 
 ```{r, feature_histogram}
-
 if (params$type == "continuous") {
-
-create_histogram_with_statistics(
-  data = pin_individual,
-  target_feature = target_feature_value,
-  x_label = target_feature_value
-)
+  create_histogram_with_statistics(
+    data = pin_individual,
+    target_feature = target_feature_value,
+    x_label = target_feature_value
+  )
 }
 ```
 
@@ -585,25 +583,25 @@ if (params$type == "continuous") {
 ```{r top_10_correlation_plot}
 # Select the top 10 features, remove rows with NA values, rename columns, calculate the correlation, and plot the correlation matrix
 if (params$type == "continuous") {
-assessment_data_new %>%
-  rename(
-    "Property Class Meta" = meta_class,
-    "Property Class Char" = char_class
-  ) %>%
-  ccao::vars_rename(
-    names_from = "model",
-    names_to = "pretty",
-    type = "inplace",
-    dict = ccao::vars_dict
-  ) %>%
-  select_if(is.numeric) %>%
-  select(-all_of(columns_to_remove)) %>%
-  select(all_of(top_10_features)) %>%
-  na.omit() %>%
-  rename_with(~ gsub("^meta_|^prox_|^other_|^loc_|^char_|^acs5|^acs_|^ccao_", "", .)) %>%
-  rename_with(~ gsub("_", " ", .)) %>%
-  cor() %>%
-  corrplot(method = "circle", tl.cex = 0.6, tl.srt = 45, addgrid.col = "grey", mar = c(1, 1, 1, 1))
+  assessment_data_new %>%
+    rename(
+      "Property Class Meta" = meta_class,
+      "Property Class Char" = char_class
+    ) %>%
+    ccao::vars_rename(
+      names_from = "model",
+      names_to = "pretty",
+      type = "inplace",
+      dict = ccao::vars_dict
+    ) %>%
+    select_if(is.numeric) %>%
+    select(-all_of(columns_to_remove)) %>%
+    select(all_of(top_10_features)) %>%
+    na.omit() %>%
+    rename_with(~ gsub("^meta_|^prox_|^other_|^loc_|^char_|^acs5|^acs_|^ccao_", "", .)) %>%
+    rename_with(~ gsub("_", " ", .)) %>%
+    cor() %>%
+    corrplot(method = "circle", tl.cex = 0.6, tl.srt = 45, addgrid.col = "grey", mar = c(1, 1, 1, 1))
 }
 ```
 `r if (parm$type = "continuous"):::`
@@ -838,34 +836,34 @@ shap_df_filtered_long %>%
 `r if (parm$type = "continuous") ### Violin Plot Comparing SHAP to Feature`
 ```{r violin_plots_shap_to_feature}
 if (params$type == "continuous") {
-# Calculate the number of digits
-num_digits <- card_individual %>%
-  pull({{ target_feature_shap }}) %>%
-  max(na.rm = TRUE) %>%
-  floor() %>%
-  as.character() %>%
-  str_length()
+  # Calculate the number of digits
+  num_digits <- card_individual %>%
+    pull({{ target_feature_shap }}) %>%
+    max(na.rm = TRUE) %>%
+    floor() %>%
+    as.character() %>%
+    str_length()
 
-quantiles <- card_individual %>%
-  pull({{ target_feature_shap }}) %>%
-  quantile(c(0.025, 0.975), na.rm = TRUE)
+  quantiles <- card_individual %>%
+    pull({{ target_feature_shap }}) %>%
+    quantile(c(0.025, 0.975), na.rm = TRUE)
 
-# Create the violin plot, excluding outliers only in the display
-card_individual %>%
-  select(meta_card_num, meta_pin, {{ target_feature_shap }}, {{ target_feature_value }}) %>%
-  mutate(bin = cut_number(!!sym(target_feature_value), n = 2, dig.lab = num_digits)) %>%
-  ggplot(aes(x = bin, y = !!sym(target_feature_shap))) +
-  geom_violin(fill = "#69b3a2") +
-  theme_minimal() +
-  xlab("Feature Value") +
-  ylab("SHAP Value") +
-  scale_x_discrete(labels = function(x) {
-    x <- gsub("\\.[^,\\]]*", "", x) # Clean the factor levels for chart
-    x <- gsub("[^0-9,,]", "", x)
-    gsub(",", "-", x)
-  }) +
-  coord_cartesian(ylim = quantiles) + # Focus only on the range between the 2.5% and 97.5% quantiles
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+  # Create the violin plot, excluding outliers only in the display
+  card_individual %>%
+    select(meta_card_num, meta_pin, {{ target_feature_shap }}, {{ target_feature_value }}) %>%
+    mutate(bin = cut_number(!!sym(target_feature_value), n = 2, dig.lab = num_digits)) %>%
+    ggplot(aes(x = bin, y = !!sym(target_feature_shap))) +
+    geom_violin(fill = "#69b3a2") +
+    theme_minimal() +
+    xlab("Feature Value") +
+    ylab("SHAP Value") +
+    scale_x_discrete(labels = function(x) {
+      x <- gsub("\\.[^,\\]]*", "", x) # Clean the factor levels for chart
+      x <- gsub("[^0-9,,]", "", x)
+      gsub(",", "-", x)
+    }) +
+    coord_cartesian(ylim = quantiles) + # Focus only on the range between the 2.5% and 97.5% quantiles
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 }
 ```
 
@@ -896,12 +894,12 @@ shapviz::shapviz(
 
 ```{r mean_feature_neighborhood}
 if (params$type == "continuous") {
-pin_nbhd %>%
-  ggplot() +
-  geom_sf(aes(fill = !!sym(paste0({{ target_feature_value }}, "_neighborhood_mean")))) +
-  scale_fill_viridis_c(option = "viridis", name = "Value") +
-  theme_void() +
-  coord_sf(xlim = c(-88.4, -87.52398), ylim = c(41.5, 42.2))
+  pin_nbhd %>%
+    ggplot() +
+    geom_sf(aes(fill = !!sym(paste0({{ target_feature_value }}, "_neighborhood_mean")))) +
+    scale_fill_viridis_c(option = "viridis", name = "Value") +
+    theme_void() +
+    coord_sf(xlim = c(-88.4, -87.52398), ylim = c(41.5, 42.2))
 }
 ```
 
@@ -1050,10 +1048,10 @@ create_leaflet_map <- function(dataset, legend_value, legend_title, order_scheme
 ```{r largest_values}
 if (params$type == "continuous") {
   highest_100 <- leaflet_data %>%
-  arrange(desc(!!sym(target_feature_value))) %>%
-  dplyr::slice(1:100)
+    arrange(desc(!!sym(target_feature_value))) %>%
+    dplyr::slice(1:100)
 
-create_leaflet_map(highest_100, {{ target_feature_value }}, "Largest 100 Values")
+  create_leaflet_map(highest_100, {{ target_feature_value }}, "Largest 100 Values")
 }
 ```
 

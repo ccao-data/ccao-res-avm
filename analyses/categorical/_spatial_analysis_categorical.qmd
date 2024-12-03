@@ -132,17 +132,18 @@ create_leaflet_map <- function(dataset, legend_value, legend_title, order_scheme
 ```{r mean_feature_neighborhood}
 percentage_palette_1 <- colorNumeric("YlOrRd", pin_nbhd$primary_mode_percentage)
 percentage_palette_2 <- colorNumeric("Blues", pin_nbhd$secondary_mode_percentage)
-factor_colors <- colorFactor(brewer.pal(n = 8, name = "Set3"), 
-                             domain = unique(c(pin_nbhd$primary_mode, pin_nbhd$secondary_mode)))
+factor_colors <- colorFactor(brewer.pal(n = 8, name = "Set3"),
+  domain = unique(c(pin_nbhd$primary_mode, pin_nbhd$secondary_mode))
+)
 
 leaflet(pin_nbhd) %>%
   addProviderTiles("CartoDB.Positron") %>%
   addPolygons(
-    fillColor = ~percentage_palette_1(primary_mode_percentage),
+    fillColor = ~ percentage_palette_1(primary_mode_percentage),
     fillOpacity = 0.7,
     color = "black",
     weight = 1,
-    popup = ~paste0(
+    popup = ~ paste0(
       "<strong>Neighborhood Code:</strong> ", meta_nbhd_code, "<br>",
       "<strong>Primary Mode Percentage:</strong> ", round(primary_mode_percentage, 2), "%<br>",
       "<strong>Secondary Mode Percentage:</strong> ", round(secondary_mode_percentage, 2), "%<br>",
@@ -157,7 +158,6 @@ leaflet(pin_nbhd) %>%
     title = "Primary Mode Percentage",
     opacity = 0.7
   )
-
 ```
 
 ### Percentage of Second Largest Feature
@@ -165,11 +165,11 @@ leaflet(pin_nbhd) %>%
 leaflet(pin_nbhd) %>%
   addProviderTiles("CartoDB.Positron") %>%
   addPolygons(
-    fillColor = ~percentage_palette_2(secondary_mode_percentage),
+    fillColor = ~ percentage_palette_2(secondary_mode_percentage),
     fillOpacity = 0.7,
     color = "black",
     weight = 1,
-    popup = ~paste0(
+    popup = ~ paste0(
       "<strong>Neighborhood Code:</strong> ", meta_nbhd_code, "<br>",
       "<strong>Primary Mode Percentage:</strong> ", round(primary_mode_percentage, 2), "%<br>",
       "<strong>Secondary Mode Percentage:</strong> ", round(secondary_mode_percentage, 2), "%<br>",
@@ -190,17 +190,18 @@ leaflet(pin_nbhd) %>%
 ### Mode Value of the Feature
 
 ```{r mode_feature_neighborhood}
-factor_colors <- colorFactor(brewer.pal(n = 8, name = "Set3"), 
-                             domain = unique(c(pin_nbhd$mode_1, pin_nbhd$mode_2)))
+factor_colors <- colorFactor(brewer.pal(n = 8, name = "Set3"),
+  domain = unique(c(pin_nbhd$mode_1, pin_nbhd$mode_2))
+)
 
 leaflet(pin_nbhd) %>%
   addProviderTiles("CartoDB.Positron") %>%
   addPolygons(
-    fillColor = ~factor_colors(primary_mode),
+    fillColor = ~ factor_colors(primary_mode),
     fillOpacity = 0.7,
     color = "black",
     weight = 1,
-    popup = ~paste0(
+    popup = ~ paste0(
       "<strong>Neighborhood Code:</strong> ", meta_nbhd_code, "<br>",
       "<strong>Primary Mode Percentage:</strong> ", round(primary_mode_percentage, 2), "%<br>",
       "<strong>Secondary Mode Percentage:</strong> ", round(secondary_mode_percentage, 2), "%<br>",
@@ -215,11 +216,11 @@ leaflet(pin_nbhd) %>%
 leaflet(pin_nbhd) %>%
   addProviderTiles("CartoDB.Positron") %>%
   addPolygons(
-    fillColor = ~factor_colors(secondary_mode),
+    fillColor = ~ factor_colors(secondary_mode),
     fillOpacity = 0.7,
     color = "black",
     weight = 1,
-    popup = ~paste0(
+    popup = ~ paste0(
       "<strong>Neighborhood Code:</strong> ", meta_nbhd_code, "<br>",
       "<strong>Primary Mode Percentage:</strong> ", round(primary_mode_percentage, 2), "%<br>",
       "<strong>Secondary Mode Percentage:</strong> ", round(secondary_mode_percentage, 2), "%<br>",
