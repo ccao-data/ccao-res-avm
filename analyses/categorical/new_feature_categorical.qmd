@@ -30,13 +30,13 @@ params:
   type: "categorical"
 ---
 
-{{< include ../setup_shared.qmd >}}
+{{< include ../shared/setup_shared.qmd >}}
 
 {{< include _data_processing_categorical.qmd >}}
 
 {{< include _descriptive_stats_categorical.qmd >}}
 
-{{< include ../_ratio_stats_shared.qmd >}}
+{{< include ../shared/_ratio_stats_shared.qmd >}}
 
 {{< include _shaps_categorical.qmd >}}
 

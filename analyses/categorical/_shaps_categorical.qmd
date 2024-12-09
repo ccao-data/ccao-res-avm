@@ -122,7 +122,6 @@ shaps_township
 ## Violin Plots of SHAP Values by Feature Value
 
 ```{r violin_plots_shap_to_feature, echo=FALSE, warning=FALSE ,message=FALSE, error=FALSE, results='asis', fig.keep='all'}
-# Calculate the number of digits
 num_digits <- card_individual %>%
   pull({{ target_feature_shap }}) %>%
   max(na.rm = TRUE) %>%
@@ -130,21 +129,43 @@ num_digits <- card_individual %>%
   as.character() %>%
   str_length()
 
-
-# Create the violin plot, excluding outliers only in the display
+# Prepare the data for the violin plot
 p_interactive <- card_individual %>%
   select(meta_card_num, meta_pin, {{ target_feature_shap }}, {{ target_feature_value }}) %>%
-  mutate(bin = (!!sym(target_feature_value))) %>%
+  mutate(bin = !!sym(target_feature_value)) %>%
   group_by(bin) %>%
   filter(bin %in% c(
     sort(unique(bin), decreasing = TRUE)[1:5], # Top 5 highest values
     sort(unique(bin))[1:5] # Bottom 5 lowest values
   ))
+
+# Create the violin plot
+quantiles <- quantile(card_individual %>% pull({{ target_feature_shap }}), c(0.025, 0.975), na.rm = TRUE)
+
+p_interactive %>%
+  mutate(bin = cut_number(!!sym(target_feature_value), n = 5, dig.lab = num_digits)) %>%
+  ggplot(aes(x = bin, y = !!sym(target_feature_shap))) +
+  geom_violin(fill = "#69b3a2", alpha = 0.7) +
+  theme_minimal() +
+  xlab("Feature Value (Binned)") +
+  ylab("SHAP Value") +
+  scale_x_discrete(labels = function(x) {
+    x <- gsub("\\.[^,\\]]*", "", x) # Clean the factor levels for chart
+    x <- gsub("[^0-9,,]", "", x)
+    gsub(",", "-", x)
+  }) +
+  coord_cartesian(ylim = quantiles) + # Focus only on the range between the 2.5% and 97.5% quantiles
+  theme(
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+    plot.title = element_text(hjust = 0.5)
+  ) +
+  ggtitle("Violin Plot of SHAP Values for Top 5 Largest Features")
 ```
 
 ## Scatterplot Demonstrating the Relationship between SHAP and Feature Value
 
 ```{r SHAP_scatterplot, echo=FALSE,warning=FALSE,message=FALSE,error=FALSE, results='asis',fig.keep='all'}
+
 shapviz::shapviz(
   object = shap_new %>%
     select(all_of(shap_predictors)) %>%
@@ -155,6 +176,10 @@ shapviz::shapviz(
 ) %>%
   shapviz::sv_dependence(
     v = target_feature_value
-  )
+  ) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  scale_x_discrete(labels = function(labels) {
+    substr(labels, 1, 15) # Truncate to the first 15 characters
+  })
 ```
 :::
