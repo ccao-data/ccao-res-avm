@@ -1,7 +1,7 @@
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # 1. Setup ---------------------------------------------------------------------
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
+library(igraph)
 # NOTE: See DESCRIPTION for library dependencies and R/setup.R for
 # variables used in each pipeline stage
 
@@ -9,15 +9,15 @@
 tictoc::tic.clearlog()
 tictoc::tic("Ingest")
 
-# Load libraries, helpers, and recipes from files
-purrr::walk(list.files("R/", "\\.R$", full.names = TRUE), source)
-
 # Load additional dev R libraries (see README#managing-r-dependencies)
 suppressPackageStartupMessages({
   library(DBI)
   library(igraph)
   library(noctua)
 })
+
+# Load libraries, helpers, and recipes from files
+purrr::walk(list.files("R/", "\\.R$", full.names = TRUE), source)
 
 # Adds arrow support to speed up ingest process.
 noctua_options(unload = TRUE)
