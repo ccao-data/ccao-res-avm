@@ -1,7 +1,6 @@
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # 1. Setup ---------------------------------------------------------------------
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-install.packages("igraph")
 # NOTE: See DESCRIPTION for library dependencies and R/setup.R for
 # variables used in each pipeline stage
 
@@ -12,7 +11,6 @@ tictoc::tic("Ingest")
 # Load additional dev R libraries (see README#managing-r-dependencies)
 suppressPackageStartupMessages({
   library(DBI)
-  library(igraph)
   library(noctua)
 })
 
