@@ -68,8 +68,7 @@ training_data <- dbGetQuery(
   AND NOT sale.sale_filter_deed_type
   AND Year(sale.sale_date) >= {params$input$min_sale_year}
   ")
-) %>%
-  mutate(random = runif(n()))
+)
 tictoc::toc()
 
 # Pull all ADDCHARS/HIE data. These are Home Improvement Exemptions (HIEs)
@@ -98,7 +97,8 @@ assessment_data <- dbGetQuery(
   WHERE year BETWEEN '{as.numeric(params$assessment$data_year) - 1}'
     AND '{params$assessment$data_year}'
   ")
-)
+) %>%
+  mutate(random = runif(n()))
 tictoc::toc()
 
 # Save both years for report generation using the characteristics
