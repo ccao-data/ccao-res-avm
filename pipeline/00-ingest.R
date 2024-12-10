@@ -8,12 +8,6 @@
 tictoc::tic.clearlog()
 tictoc::tic("Ingest")
 
-# Load additional dev R libraries (see README#managing-r-dependencies)
-suppressPackageStartupMessages({
-  library(DBI)
-  library(noctua)
-})
-
 # Load libraries, helpers, and recipes from files
 purrr::walk(list.files("R/", "\\.R$", full.names = TRUE), source)
 
