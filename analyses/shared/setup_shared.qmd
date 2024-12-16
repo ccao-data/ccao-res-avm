@@ -1,5 +1,16 @@
-
-
+---
+params:
+  run_id: "2024-12-02-determined-sam"
+  run_id_year: "2024"
+  comparison_run_id: "2024-07-13-great-eric"
+  comparison_run_id_year: "2024"
+  added_feature: "prox_nearest_road_arterial_surface_type" 
+  added_feature_shap: "prox_nearest_road_arterial_surface_type_shap"
+  description: "Surface type of the nearest arterial road"
+  min_range: 5
+  max_range: 95
+  type: "categorical"
+---
 ```{r packages, include = FALSE}
 library(purrr)
 library(here)

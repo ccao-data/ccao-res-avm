@@ -102,7 +102,7 @@ create_leaflet_map <- function(dataset, legend_value, legend_title, order_scheme
           "<br>", "Feature: ", get(params$added_feature),
           "<br>", "New FMV: ", pred_pin_final_fmv_new,
           "<br>", "Comparison FMV: ", pred_pin_final_fmv_comp,
-          "<br>", "FMV Difference: ", scales::percent(diff_pred_pin_final_fmv)
+          "<br>", "FMV Difference: ", scales::percent(diff_pred_pin_final_fmv, accuracy = 0.01)
         )
       }
     ) %>%
@@ -130,104 +130,113 @@ create_leaflet_map <- function(dataset, legend_value, legend_title, order_scheme
 ### Percentage of Largest Feature
 
 ```{r mean_feature_neighborhood}
-percentage_palette_1 <- colorNumeric("YlOrRd", pin_nbhd$primary_mode_percentage)
-percentage_palette_2 <- colorNumeric("Blues", pin_nbhd$secondary_mode_percentage)
-factor_colors <- colorFactor(brewer.pal(n = 8, name = "Set3"),
-  domain = unique(c(pin_nbhd$primary_mode, pin_nbhd$secondary_mode))
+
+```{r}
+create_neighborhood_map <- function(data, 
+                                    fill_column, 
+                                    palette, 
+                                    legend_title, 
+                                    fill_type = c("continuous", "categorical"), 
+                                    top_n = NULL) {
+  fill_type <- match.arg(fill_type)
+  
+  # Filter to top N most common values if fill type is categorical
+  if (fill_type == "categorical" && !is.null(top_n)) {
+    top_values <- data %>%
+      count(!!sym(fill_column)) %>%
+      arrange(desc(n)) %>%
+      slice_head(n = top_n) %>%
+      pull(!!sym(fill_column))
+    
+    # Filter data to keep only rows with top values
+    data <- data %>% filter(!!sym(fill_column) %in% top_values)
+  }
+  
+  # Define palette based on fill type
+  if (fill_type == "continuous") {
+    fill_palette <- colorNumeric(palette, domain = data[[fill_column]])
+  } else if (fill_type == "categorical") {
+    fill_palette <- colorFactor(brewer.pal(n = 8, name = palette), domain = unique(data[[fill_column]]))
+  }
+  
+  # Generate popup content dynamically
+  popup_content <- ~ paste0(
+    "<strong>Neighborhood Code:</strong> ", meta_nbhd_code, "<br>",
+    "<strong>Primary Mode Percentage:</strong> ", round(primary_mode_percentage, 2), "%<br>",
+    "<strong>Secondary Mode Percentage:</strong> ", round(secondary_mode_percentage, 2), "%<br>",
+    "<strong>Primary Mode:</strong> ", primary_mode, "<br>",
+    "<strong>Secondary Mode:</strong> ", secondary_mode
+  )
+  
+  # Build the map
+  map <- leaflet(data) %>%
+    addProviderTiles("CartoDB.Positron") %>%
+    addPolygons(
+      fillColor = ~ fill_palette(data[[fill_column]]),
+      fillOpacity = 0.7,
+      color = "black",
+      weight = 1,
+      popup = popup_content
+    ) %>%
+    addLegend(
+      position = "bottomright",
+      pal = fill_palette,
+      values = ~ data[[fill_column]],
+      title = legend_title,
+      opacity = 0.7
+    )
+  
+  return(map)
+}
+create_neighborhood_map(
+  data = pin_nbhd, 
+  fill_column = "primary_mode_percentage", 
+  palette = "YlOrRd", 
+  legend_title = "Primary Mode Percentage", 
+  fill_type = "continuous"
 )
 
-leaflet(pin_nbhd) %>%
-  addProviderTiles("CartoDB.Positron") %>%
-  addPolygons(
-    fillColor = ~ percentage_palette_1(primary_mode_percentage),
-    fillOpacity = 0.7,
-    color = "black",
-    weight = 1,
-    popup = ~ paste0(
-      "<strong>Neighborhood Code:</strong> ", meta_nbhd_code, "<br>",
-      "<strong>Primary Mode Percentage:</strong> ", round(primary_mode_percentage, 2), "%<br>",
-      "<strong>Secondary Mode Percentage:</strong> ", round(secondary_mode_percentage, 2), "%<br>",
-      "<strong>Primary Mode:</strong> ", primary_mode, "<br>",
-      "<strong>Secondary Mode:</strong> ", secondary_mode
-    )
-  ) %>%
-  addLegend(
-    position = "bottomright",
-    pal = percentage_palette_1,
-    values = ~primary_mode_percentage,
-    title = "Primary Mode Percentage",
-    opacity = 0.7
-  )
 ```
 
 ### Percentage of Second Largest Feature
+
 ```{r median_feature_neighborhood}
-leaflet(pin_nbhd) %>%
-  addProviderTiles("CartoDB.Positron") %>%
-  addPolygons(
-    fillColor = ~ percentage_palette_2(secondary_mode_percentage),
-    fillOpacity = 0.7,
-    color = "black",
-    weight = 1,
-    popup = ~ paste0(
-      "<strong>Neighborhood Code:</strong> ", meta_nbhd_code, "<br>",
-      "<strong>Primary Mode Percentage:</strong> ", round(primary_mode_percentage, 2), "%<br>",
-      "<strong>Secondary Mode Percentage:</strong> ", round(secondary_mode_percentage, 2), "%<br>",
-      "<strong>Primary Mode:</strong> ", primary_mode, "<br>",
-      "<strong>Secondary Mode:</strong> ", secondary_mode
-    )
-  ) %>%
-  addLegend(
-    position = "bottomright",
-    pal = percentage_palette_2,
-    values = ~secondary_mode_percentage,
-    title = "Secondary Mode Percentage",
-    opacity = 0.7
-  )
+create_neighborhood_map(
+  data = pin_nbhd, 
+  fill_column = "secondary_mode_percentage", 
+  palette = "Blues", 
+  legend_title = "Secondary Mode Percentage", 
+  fill_type = "continuous"
+)
 ```
 
 
 ### Mode Value of the Feature
 
 ```{r mode_feature_neighborhood}
-factor_colors <- colorFactor(brewer.pal(n = 8, name = "Set3"),
-  domain = unique(c(pin_nbhd$mode_1, pin_nbhd$mode_2))
+primary_mode_map <- create_neighborhood_map(
+  data = pin_nbhd, 
+  fill_column = "primary_mode", 
+  palette = "Set3", 
+  legend_title = "Primary Mode (Top 5)", 
+  fill_type = "categorical", 
+  top_n = 5
 )
 
-leaflet(pin_nbhd) %>%
-  addProviderTiles("CartoDB.Positron") %>%
-  addPolygons(
-    fillColor = ~ factor_colors(primary_mode),
-    fillOpacity = 0.7,
-    color = "black",
-    weight = 1,
-    popup = ~ paste0(
-      "<strong>Neighborhood Code:</strong> ", meta_nbhd_code, "<br>",
-      "<strong>Primary Mode Percentage:</strong> ", round(primary_mode_percentage, 2), "%<br>",
-      "<strong>Secondary Mode Percentage:</strong> ", round(secondary_mode_percentage, 2), "%<br>",
-      "<strong>Primary Mode:</strong> ", primary_mode, "<br>",
-      "<strong>Secondary Mode:</strong> ", secondary_mode
-    )
-  )
+
 ```
 ### Second Modal Value
 
-```{r}
-leaflet(pin_nbhd) %>%
-  addProviderTiles("CartoDB.Positron") %>%
-  addPolygons(
-    fillColor = ~ factor_colors(secondary_mode),
-    fillOpacity = 0.7,
-    color = "black",
-    weight = 1,
-    popup = ~ paste0(
-      "<strong>Neighborhood Code:</strong> ", meta_nbhd_code, "<br>",
-      "<strong>Primary Mode Percentage:</strong> ", round(primary_mode_percentage, 2), "%<br>",
-      "<strong>Secondary Mode Percentage:</strong> ", round(secondary_mode_percentage, 2), "%<br>",
-      "<strong>Primary Mode:</strong> ", primary_mode, "<br>",
-      "<strong>Secondary Mode:</strong> ", secondary_mode
-    )
-  )
+```{r second modal value}
+secondary_mode_map <- create_neighborhood_map(
+  data = pin_nbhd, 
+  fill_column = "secondary_mode", 
+  palette = "Set3", 
+  legend_title = "Secondary Mode (Top 5)", 
+  fill_type = "categorical", 
+  top_n = 5
+)
+
 ```
 :::
 ## Highest and Lowest 100 Values 
