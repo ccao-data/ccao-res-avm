@@ -134,7 +134,6 @@ rm(AWS_ATHENA_CONN_NOCTUA)
 
 
 
-
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # 3. Define Functions ----------------------------------------------------------
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -147,16 +146,16 @@ col_type_dict <- ccao::vars_dict %>%
   drop_na(var_name)
 
 # Mini-function to ensure that columns are the correct type
-recode_column_type <- function(col, col_name, dictionary = col_type_dict) {
-  col_type <- dictionary %>%
+recode_column_type <- function(col, col_name, dict = col_type_dict) {
+  col_type <- dict %>%
     filter(var_name == col_name) %>%
     pull(var_type)
   switch(col_type,
-    numeric = as.numeric(col),
-    character = as.character(col),
-    logical = as.logical(as.numeric(col)),
-    categorical = as.factor(col),
-    date = lubridate::as_date(col)
+         numeric = as.numeric(col),
+         character = as.character(col),
+         logical = as.logical(as.numeric(col)),
+         categorical = as.factor(col),
+         date = lubridate::as_date(col)
   )
 }
 
@@ -299,12 +298,12 @@ training_data_clean <- training_data_w_hie %>%
   # Recode factor variables using the definitions stored in ccao::vars_dict
   # This will remove any categories not stored in the dictionary and convert
   # them to NA (useful since there are a lot of misrecorded variables)
-  ccao::vars_recode(cols = starts_with("char_"), code_type = "code") %>%
+  ccao::vars_recode(cols = starts_with("char_"), type = "code") %>%
   # Recode the number of apartments from its numeric code to its actual number
   # of units. Additionally, ensure non-multi-family PINs always have NONE apts
   ccao::vars_recode(
     cols = all_of("char_apts"),
-    code_type = "short",
+    type = "short",
     as_factor = FALSE
   ) %>%
   mutate(
@@ -416,10 +415,10 @@ training_data_clean <- training_data_w_hie %>%
 # used on. The cleaning steps are the same as above, with the exception of the
 # time variables and identifying complexes
 assessment_data_clean <- assessment_data_w_hie %>%
-  ccao::vars_recode(cols = starts_with("char_"), code_type = "code") %>%
+  ccao::vars_recode(cols = starts_with("char_"), type = "code") %>%
   ccao::vars_recode(
     cols = all_of("char_apts"),
-    code_type = "short",
+    type = "short",
     as_factor = FALSE
   ) %>%
   # Apply the helper function to process array columns
@@ -550,14 +549,14 @@ complex_id_temp <- assessment_data_clean %>%
     char_bldg_sf.x <= char_bldg_sf.y + params$input$complex$match_fuzzy$bldg_sf,
     # nolint start
     (char_yrblt.x >= char_yrblt.y - params$input$complex$match_fuzzy$yrblt &
-      char_yrblt.x <= char_yrblt.y + params$input$complex$match_fuzzy$yrblt) |
+       char_yrblt.x <= char_yrblt.y + params$input$complex$match_fuzzy$yrblt) |
       is.na(char_yrblt.x),
     # Units must be within 250 feet of other units
     (loc_x_3435.x >= loc_x_3435.y - params$input$complex$match_fuzzy$dist_ft &
-      loc_x_3435.x <= loc_x_3435.y + params$input$complex$match_fuzzy$dist_ft) |
+       loc_x_3435.x <= loc_x_3435.y + params$input$complex$match_fuzzy$dist_ft) |
       is.na(loc_x_3435.x),
     (loc_y_3435.x >= loc_y_3435.y - params$input$complex$match_fuzzy$dist_ft &
-      loc_y_3435.x <= loc_y_3435.y + params$input$complex$match_fuzzy$dist_ft) |
+       loc_y_3435.x <= loc_y_3435.y + params$input$complex$match_fuzzy$dist_ft) |
       is.na(loc_y_3435.x)
     # nolint end
   ) %>%
