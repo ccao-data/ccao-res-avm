@@ -102,10 +102,6 @@ assessment_data <- dbGetQuery(
   mutate(random = runif(n()))
 tictoc::toc()
 
-
-training_data <- training_data %>%
-  left_join(join_data, by = c("meta_pin", "meta_card"))
-
 # Save both years for report generation using the characteristics
 assessment_data %>%
   write_parquet(paths$input$char$local)
