@@ -418,7 +418,7 @@ assessment_data_clean <- assessment_data_w_hie %>%
   ccao::vars_recode(cols = starts_with("char_"), code_type = "code") %>%
   ccao::vars_recode(
     cols = all_of("char_apts"),
-    type = "short",
+    code_type = "short",
     as_factor = FALSE
   ) %>%
   # Apply the helper function to process array columns
