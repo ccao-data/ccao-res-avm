@@ -107,8 +107,10 @@ assessment_data %>%
   write_parquet(paths$input$char$local)
 
 # Save only the assessment year data to use for assessing values
+assessment_data <- assessment_data %>%
+  filter(year == params$assessment$data_year)
+
 join_data <- assessment_data %>%
-  filter(year == params$assessment$data_year) %>%
   select(meta_pin, random, meta_card_num) %>%
   distinct(meta_pin, meta_card_num, .keep_all = TRUE)
 
