@@ -99,8 +99,10 @@ assessment_data <- dbGetQuery(
   ")
 ) %>%
   group_by(loc_census_tract_geoid) %>%
-  mutate(sq_ft_variance = sd(char_bldg_sf),
-         age_variance = sd(char_yrblt)) %>%
+  mutate(
+    sq_ft_variance = sd(char_bldg_sf, na.rm = TRUE),
+    age_variance = sd(char_yrblt, na.rm = TRUE)
+  ) %>%
   ungroup()
 tictoc::toc()
 
