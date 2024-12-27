@@ -69,7 +69,8 @@ training_data <- dbGetQuery(
   AND NOT sale.sale_filter_deed_type
   AND Year(sale.sale_date) >= {params$input$min_sale_year}
   ")
-)
+) %>%
+  mutate(random = runif(n()))
 tictoc::toc()
 
 # Pull all ADDCHARS/HIE data. These are Home Improvement Exemptions (HIEs)
@@ -109,13 +110,6 @@ assessment_data %>%
 # Save only the assessment year data to use for assessing values
 assessment_data <- assessment_data %>%
   filter(year == params$assessment$data_year)
-
-join_data <- assessment_data %>%
-  select(meta_pin, random, meta_card_num) %>%
-  distinct(meta_pin, meta_card_num, .keep_all = TRUE)
-
-training_data <- training_data %>%
-  left_join(join_data, by = c("meta_pin" = "meta_pin", "meta_card_num" = "meta_card_num"))
 
 # Pull neighborhood-level land rates ($/sqft), as calculated by Valuations
 tictoc::tic("Land rate data pulled")
