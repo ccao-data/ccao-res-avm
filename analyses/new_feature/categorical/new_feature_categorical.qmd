@@ -1,0 +1,41 @@
+---
+title: "New Feature Analysis"
+subtitle: "Run ID: `r params$added_feature`: `r params$description`"
+date: "`r Sys.Date()`"
+author: "Cook County Assessor's Office Data Department"
+execute:
+  echo: false
+  warning: false
+  asis: true
+  message: false
+  tabset: true
+format:
+  html:
+    embed-resources: true
+    toc: true
+    toc_float: true
+    fig-align: center
+    fontsize: 12pt
+    code-fold: true
+params:
+  run_id: "2024-12-26-ecstatic-matt"
+  run_id_year: "2025"
+  comparison_run_id: "2024-12-20-quizzical-tristan"
+  comparison_run_id_year: "2025"
+  added_feature: "prox_nearest_road_arterial_surface_type" 
+  added_feature_shap: "prox_nearest_road_arterial_surface_type_shap"
+  description: "Surface Type is a categorical variable that describes the type of surface of the nearest arterial road to the property."
+---
+
+{{< include ../shared/setup_shared.qmd >}}
+
+{{< include _data_processing_categorical.qmd >}}
+
+{{< include _descriptive_stats_categorical.qmd >}}
+
+{{< include ../shared/_ratio_stats_shared.qmd >}}
+
+{{< include _shaps_categorical.qmd >}}
+
+{{< include _spatial_analysis_categorical.qmd >}}
+

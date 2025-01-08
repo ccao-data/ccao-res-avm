@@ -1,0 +1,107 @@
+{{< include ../shared/setup_shared.qmd >}}
+
+# Descriptive Statistics 
+
+## Percentages of Characteristics by Geography
+
+::: {.panel-tabset}
+
+```{r _descriptive_stats_categorical_descriptive_setup}
+create_category_percentages <- function(data, target_feature, group_by_column = NULL) {
+  target_feature <- sym(target_feature)
+  group_vars <- if (!is.null(group_by_column)) {
+    list(sym(group_by_column), target_feature)
+  } else {
+    list(target_feature)
+  }
+
+  category_percentages <- data %>%
+    group_by(!!!group_vars) %>%
+    count() %>%
+    group_by(!!!if (!is.null(group_by_column)) list(sym(group_by_column)) else list()) %>%
+    mutate(percentage = scales::percent(n / sum(n), accuracy = 0.01)) %>%
+    select(!!!group_vars, percentage) %>%
+    pivot_wider(names_from = !!target_feature, values_from = percentage, values_fill = list(percentage = scales::percent(0)))
+
+  mode_column <- data %>%
+    group_by(!!!if (!is.null(group_by_column)) list(sym(group_by_column)) else list()) %>%
+    summarize(mode_value = !!target_feature %>%
+      as.character() %>% # Ensures compatibility for factor levels
+      .[which.max(tabulate(match(., unique(.))))]) %>%
+    ungroup()
+
+  # Join the mode column to the category_percentages data
+  category_percentages <- category_percentages %>%
+    left_join(mode_column, by = if (!is.null(group_by_column)) group_by_column else character(0)) %>%
+    mutate(mode = as.character(mode_value)) %>%
+    select(-mode_value)
+
+  datatable(category_percentages,
+    options = list(
+      scrollY = "300px",
+      scrollX = TRUE,
+      paging = FALSE,
+      searching = TRUE
+    ),
+    rownames = FALSE
+  )
+}
+```
+
+### Overall
+
+```{r _descriptive_stats_categorical_mean_median}
+create_category_percentages(pin_individual, target_feature = {{ target_feature_value }})
+```
+
+### Township
+```{r _descriptive_stats_categorical_mean_median_township}
+create_category_percentages(pin_individual, target_feature = {{ target_feature_value }}, group_by_column = "meta_township_name")
+```
+
+### Neighborhood
+
+```{r _descriptive_stats_categorical_mean_median_neighborhood}
+create_category_percentages(pin_individual, target_feature = {{ target_feature_value }}, group_by_column = "meta_nbhd_code")
+```
+:::
+
+
+
+```{r, _descriptive_stats_categorical_histogram_function}
+# Histogram function in Helpers.R
+
+fmv_histogram <- create_histogram(
+  data = pin_individual,
+  target_feature = "diff_pred_pin_initial_fmv",
+  x_label = "Change in FMV",
+  filter_outliers = TRUE,
+  filter_column = "diff_pred_pin_initial_fmv"
+)
+
+shap_histogram <- create_histogram(
+  data = shap_new,
+  target_feature = target_feature_value,
+  x_label = "SHAP Value",
+  filter_outliers = TRUE,
+  filter_column = target_feature_value
+)
+```
+
+## Histograms
+
+::: {.panel-tabset}
+
+### FMV Change Histogram
+
+This chart shows the distribution of the difference between 'pred_pin_initial_fmv' in the model with the added feature minus the model without the added feature. Outliers outside of 95% are removed to make the chart more readable. 
+```{r _descriptive_stats_categorical_fmv_change_histogram, results='asis',fig.keep='all'}
+fmv_histogram
+```
+
+### SHAP Histogram
+
+```{r _descriptive_stats_categorical_shap_histogram, results='asis', fig.keep='all'}
+shap_histogram
+```
+:::
