@@ -91,14 +91,7 @@ assessment_card_data_mc <- assessment_card_data_pred %>%
   # blowing up the PIN-level AV
   group_by(meta_pin) %>%
   mutate(
-    pred_pin_card_sum = ifelse(
-      sum(pred_card_intermediate_fmv) * meta_tieback_proration_rate <=
-        params$pv$multicard_yoy_cap * first(meta_1yr_pri_board_tot * 10) |
-        is.na(meta_1yr_pri_board_tot) |
-        n() != 2,
-      sum(pred_card_intermediate_fmv),
-      max(pred_card_intermediate_fmv)
-    )
+    pred_pin_card_sum = sum(pred_card_intermediate_fmv)
   ) %>%
   ungroup()
 
@@ -189,8 +182,6 @@ assessment_pin_data_w_land <- assessment_card_data_round %>%
     # Keep the uncapped value for display in desk review
     pred_pin_uncapped_fmv_land = ceiling(char_land_sf * land_rate_per_sqft)
   )
-
-
 
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -324,7 +315,7 @@ assessment_card_data_merged %>%
   ) %>%
   ccao::vars_recode(
     cols = any_of(char_vars),
-    code_type = "long",
+    #code_type = "long",
     as_factor = FALSE
   ) %>%
   write_parquet(paths$output$assessment_card$local)
@@ -551,7 +542,7 @@ message("Saving final PIN-level data")
 assessment_pin_data_final %>%
   ccao::vars_recode(
     cols = starts_with("char_"),
-    code_type = "short",
+    #code_type = "short",
     as_factor = FALSE
   ) %>%
   # Coerce columns to their expected Athena output type

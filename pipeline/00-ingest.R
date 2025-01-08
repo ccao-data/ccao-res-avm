@@ -286,6 +286,11 @@ message("Adding time features and cleaning")
 
 ## 5.1. Training Data ----------------------------------------------------------
 
+
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Testing. Multi-card munging --------------------------------------------------
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 # Clean up the training data. Goal is to get it into a publishable format.
 # Final featurization, missingness, etc. is handled via Tidymodels recipes
 training_data_clean <- training_data_w_hie %>%
@@ -399,8 +404,78 @@ training_data_clean <- training_data_w_hie %>%
     !(char_bldg_sf < 300 & !ind_pin_is_multicard),
     !(char_land_sf < 300 & !ind_pin_is_multicard)
   ) %>%
+  as_tibble() #%>%
+ # write_parquet(paths$input$training$local)
+
+# Test new features and multi-card
+#- - - - - - - - - - - - - -
+training_data_full <- training_data_clean %>%
+  group_by(meta_pin, meta_sale_document_num) %>%
+  mutate(meta_card_id = row_number()) %>%
+  ungroup()
+
+# 2. Identify multi-card sales rows
+multicard_sales <- training_data_full %>%
+  filter(ind_pin_is_multicard) %>%
+  select(
+    meta_pin,
+    meta_sale_document_num,
+    meta_card_id,
+    meta_sale_price,
+    char_bldg_sf
+  )
+
+# 3. Summarize total building SF per PIN + doc_no
+#    (so you can compute each card's share)
+multicard_total_sf <- multicard_sales %>%
+  group_by(meta_pin, meta_sale_document_num) %>%
+  summarise(
+    total_bldg_sf = sum(char_bldg_sf, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# 4. Join total SF back onto each multi-card record, and allocate sale price
+multicard_sales_alloc <- multicard_sales %>%
+  left_join(multicard_total_sf, by = c("meta_pin", "meta_sale_document_num")) %>%
+  mutate(
+    sf_share = char_bldg_sf / total_bldg_sf,
+    meta_sale_price_allocated = meta_sale_price * sf_share
+  )
+
+# 5. Reintegrate into the main training data, joining by meta_card_id
+training_data_with_alloc <- training_data_full %>%
+  left_join(
+    multicard_sales_alloc %>%
+      select(meta_pin, meta_sale_document_num, meta_card_id, meta_sale_price_allocated),
+    by = c("meta_pin", "meta_sale_document_num", "meta_card_id")
+  ) %>%
+  # If a multi-card sale, use the allocated sale price; otherwise original
+  mutate(
+    meta_sale_price = if_else(
+      ind_pin_is_multicard,
+      meta_sale_price_allocated,
+      meta_sale_price
+    )
+  )
+
+training_data <- training_data_with_alloc %>%
+  select(-meta_sale_price_allocated, -meta_card_id)
+
+# - - - - - - - -
+# Add two features
+# - - - - - - - -
+
+training_data_clean <- training_data %>%
+  group_by(meta_pin) %>%
+  mutate(
+    char_card_pct_bldg = char_bldg_sf / sum(char_bldg_sf, na.rm = TRUE),
+    char_key_card = char_bldg_sf == max(char_bldg_sf, na.rm = TRUE)
+  ) %>%
+  ungroup() %>%
   as_tibble() %>%
   write_parquet(paths$input$training$local)
+
+
 
 
 ## 5.2. Assessment Data --------------------------------------------------------
@@ -503,7 +578,15 @@ assessment_data_clean <- assessment_data_w_hie %>%
   relocate(starts_with("sv_"), .after = everything()) %>%
   relocate("year", .after = everything()) %>%
   relocate(starts_with("meta_sale_"), .after = hie_num_expired) %>%
-  as_tibble() %>%
+  group_by(meta_pin) %>%
+  mutate(
+    total_bldg_sf        = sum(char_bldg_sf, na.rm = TRUE),
+    char_card_pct_bldg   = char_bldg_sf / total_bldg_sf,
+    # Flag as key card if it’s the maximum SF (ties will create multiple key cards)
+    char_key_card        = if_else(char_bldg_sf == max(char_bldg_sf, na.rm = TRUE), 1, 0)
+  ) %>%
+  ungroup() %>%
+  select(-total_bldg_sf) %>%
   write_parquet(paths$input$assessment$local)
 
 
