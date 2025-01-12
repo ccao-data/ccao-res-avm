@@ -247,6 +247,7 @@ model:
       - "shp_parcel_mrr_area_ratio"
       - "shp_parcel_mrr_side_ratio"
       - "shp_parcel_num_vertices"
+      - "ccao_is_active_exe_homeowner"
 
     # List of predictors included in predictor.all which are categoricals.
     # It is CRITICAL that any categorical variables are included in this list,
